@@ -59,9 +59,6 @@ To fine-tune CLIP or train the custom object detection model:
 python train.py --dataset path/to/dataset --epochs 50 --batch_size 32
 ```
 
-## Contribution
-Contributions are welcome! Please open an issue or create a pull request.
-
 ## License
 This project is licensed under the MIT License.
 
