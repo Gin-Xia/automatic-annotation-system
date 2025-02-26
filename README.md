@@ -1,64 +1,106 @@
-# automatic-annotation-system
+# Automatic Annotation System
 
-## Introduction
-This project combines OpenAI's CLIP model with a custom object detection algorithm to develop an automatic annotation system. Our goal is to leverage CLIP's powerful image-text matching capabilities while implementing a custom algorithm for object localization and bounding box generation.
+## **Project Overview**
+The **Automatic Annotation System** is a deep learning pipeline that integrates **OWL-ViT** and **MobileSAM** to automatically annotate images. It processes images, detects objects using OWL-ViT, and refines segmentation masks with MobileSAM.
 
-## Features
-- **CLIP-based Feature Extraction**: Uses CLIP to encode and match images with textual descriptions.
-- **Custom Object Detection Algorithm**: A novel approach to generating bounding boxes for detected objects.
-- **Automatic Annotation Pipeline**: Automates image annotation using CLIP and our detection algorithm.
-- **Flexible Integration**: Designed to be compatible with various datasets and image formats.
+## **Features**
+- **Batch Inference Support**: Process multiple images in parallel.
+- **Text-Guided Object Detection**: OWL-ViT enables open-vocabulary object detection.
+- **High-Precision Segmentation**: MobileSAM generates fine-grained masks.
+- **COCO Dataset Support**: Uses the COCO dataset for training and evaluation.
+- **Visualization Tools**: Visualize results with bounding boxes and segmentation masks.
 
-## Installation
-### Prerequisites
-- Python 3.8+
-- PyTorch
-- OpenAI CLIP
-- NumPy
-- Matplotlib
-- OpenCV (for image processing)
+## **Project Structure**
+```
+automatic-annotation-system/
+│── datasets/               # Dataset management
+│   ├── coco/               # COCO dataset structure
+│   │   ├── annotations/    # COCO annotations (JSON files)
+│   │   ├── train2017/      # Training images
+│   │   ├── val2017/        # Validation images
+│── models/                 # Model definitions and weights
+│   ├── owlvit-base-patch32/  # Pretrained OWL-ViT model files
+│   │   ├── config.json
+│   │   ├── merges.txt
+│   │   ├── model.safetensors
+│   │   ├── preprocessor_config.json
+│   │   ├── pytorch_model.bin
+│   │   ├── special_tokens_map.json
+│   │   ├── tokenizer_config.json
+│   │   ├── vocab.json
+│   ├── mobile_sam.pt       # Pretrained MobileSAM model weights
+│   ├── mobilesam_official.py
+│   ├── owlvit.py
+│   ├── owlvit_official.py
+│   ├── text_encoder.py
+│   ├── vision_encoder.py
+│── .gitignore              # Git ignore file
+│── coco_loader.py          # DataLoader for COCO dataset
+│── inference.py            # Script for running inference
+│── train.py                # Script for training models
+│── visualize.py            # Visualization utilities
+│── README.md               # Project documentation
+```
 
-### Setup
+## **Installation**
+### **1. Clone the Repository**
 ```bash
-# Clone the repository
-git clone https://github.com/your-repo/clip-sam-object-detection.git
-cd clip-sam-object-detection
+git clone https://github.com/yourusername/automatic-annotation-system.git
+cd automatic-annotation-system
+```
 
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
+### **2. Create and Activate Virtual Environment**
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On macOS/Linux
+.venv\Scripts\activate     # On Windows
+```
 
-# Install dependencies
+### **3. Install Dependencies**
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-### Running the Model
+## **Usage**
+### **Running Inference**
+To run inference on COCO images using OWL-ViT and MobileSAM:
 ```bash
-python main.py --image_path path/to/image.jpg --text_prompt "A car in the image"
+python inference.py
 ```
+- The script loads images, detects objects, and generates segmentation masks.
+- Outputs include **bounding boxes, segmentation masks, and confidence scores**.
 
-### Example Output
-The model will generate bounding boxes around detected objects and save annotated images.
-
-## Folder Structure
-```
-clip-sam-object-detection/
-│── models/                # Pre-trained models and fine-tuned CLIP weights
-│── datasets/              # Sample images and datasets
-│── scripts/               # Utility scripts for preprocessing and evaluation
-│── outputs/               # Annotated images and results
-│── main.py                # Main script for running the model
-│── README.md              # Project documentation
-│── requirements.txt       # Dependencies
-```
-
-## Training and Fine-Tuning
-To fine-tune CLIP or train the custom object detection model:
+### **Training the Model**
+To train a custom model:
 ```bash
-python train.py --dataset path/to/dataset --epochs 50 --batch_size 32
+python train.py
+```
+Modify the `train.py` script to specify dataset paths and training parameters.
+
+## **Configuration**
+Modify `coco_loader.py` to specify dataset paths:
+```python
+dataloader = get_coco_dataloader(root="datasets/coco/train2017",
+                                 annotation="datasets/coco/annotations/instances_train2017.json",
+                                 batch_size=8, shuffle=True)
 ```
 
-## License
+## **Visualization**
+Results can be visualized using `visualize.py`. To display predictions:
+```python
+from visualize import visualize_results
+visualize_results(image_np, best_box, masks, category_name, confidence)
+```
+
+## **Dependencies**
+- `torch`
+- `transformers`
+- `numpy`
+- `PIL`
+- `mobile-sam`
+- `torchvision`
+
+## **License**
 This project is licensed under the MIT License.
+
 
