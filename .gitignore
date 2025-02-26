@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# coco
+datasets/coco/
+
+# owlvit weight
+models/owlvit-base-patch32/
+
+# sam weight
+models/mobile_sam.pt
