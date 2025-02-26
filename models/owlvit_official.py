@@ -1,14 +1,14 @@
 import torch
 import torch.nn as nn
-from transformers import Owlv2ForObjectDetection
+from transformers import OwlViTForObjectDetection
 
 
 class OwlvitOfficial(nn.Module):
-    def __init__(self, pretrained_model_name="google/owlvit-base-patch32"):
+    def __init__(self, pretrained_model_name="models/owlvit-base-patch32"):
         super(OwlvitOfficial, self).__init__()
 
         # Load the official OWL-ViT model
-        self.model = Owlv2ForObjectDetection.from_pretrained(pretrained_model_name)
+        self.model = OwlViTForObjectDetection .from_pretrained(pretrained_model_name)
 
     def forward(self, pixel_values, input_ids, attention_mask):
         """
