@@ -1,7 +1,7 @@
 # Automatic Annotation System
 
 ## **Project Overview**
-The **Automatic Annotation System** is a deep learning pipeline that integrates **OWL-ViT** and **MobileSAM** to automatically annotate images. It processes images, detects objects using OWL-ViT, and refines segmentation masks with MobileSAM.
+The **Automatic Annotation System** is a deep learning pipeline that integrates **OWL-ViT**（Open-Vocabulary Vision Transformer） and **MobileSAM**（Segment Anything Model） to automatically annotate images. It processes images, detects objects using OWL-ViT, and refines segmentation masks with MobileSAM.
 
 ## **Features**
 - **Batch Inference Support**: Process multiple images in parallel.
