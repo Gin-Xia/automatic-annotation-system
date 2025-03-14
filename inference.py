@@ -6,6 +6,10 @@ from models.owlvit_official import OwlvitOfficial
 from models.mobilesam_official import MobileSAMOfficial
 from coco_loader import get_coco_dataloader  # Import the COCO DataLoader
 from visualize import visualize_results
+import torchvision.ops as ops
+from sklearn.cluster import KMeans
+import box_processing
+
 
 # Initialize models
 owlvit_model = OwlvitOfficial()
@@ -29,44 +33,58 @@ for batch_idx, batch in enumerate(dataloader):
         break
 
     images, bboxes, category_names = batch  # Unpack batch
+    # only detect one category when inference
+    category_names = [[category_names[0][0]]]
     images = images.to(torch.float32)
     inputs = processor(text=category_names, images=images, return_tensors="pt", do_rescale=False)  # 直接传入 Tensor
 
     with torch.no_grad():
         outputs = owlvit_model(inputs["pixel_values"], inputs["input_ids"], inputs["attention_mask"])
 
-    pred_boxes = outputs[1]  # Assuming model returns (logits, pred_boxes)
 
-    # 获取图像尺寸
-    image_height, image_width = images.shape[-2], images.shape[-1]
+    # out put of owlvit (logits, pred_boxes)
+    logits = outputs[0]
+    # print("logits shape:", logits.shape)
+    # print("Max logits:", logits.max())
+    # print("Min logits:", logits.min())
+    pred_boxes = outputs[1]
 
-    # 归一化 bbox 转换为像素坐标 (x, y, w, h)
-    pred_boxes[:, :, 0] *= image_width  # x
-    pred_boxes[:, :, 1] *= image_height  # y
-    pred_boxes[:, :, 2] *= image_width  # w
-    pred_boxes[:, :, 3] *= image_height  # h
+    valid_boxes, valid_scores = box_processing.filter_boxes_by_score(logits, pred_boxes)
+    if valid_boxes.shape[0] == 0:
+        print("No high-confidence objects detected.")
+        break
 
-    # 确保 pred_boxes 形状一致 (B, 4)
-    if pred_boxes.dim() == 3:  # 处理 batch 维度
-        pred_boxes = pred_boxes[:, 0, :]  # 只取 top-1 预测框
+    print(f"Detected {valid_boxes.shape[0]} high-confidence objects.")
 
-    pred_boxes = pred_boxes.cpu().numpy()  # 转换为 NumPy
-    # print("outputs: ",outputs[1])
+    converted_boxes = box_processing.convert_boxes(valid_boxes, images.shape[-2:])
+    filtered_boxes, filtered_scores = box_processing.apply_nms(converted_boxes, valid_scores, iou_threshold=0.3)
+    final_boxes = box_processing.merge_high_iou_boxes(filtered_boxes, filtered_scores, iou_threshold=0.7)
+    print(f"Final number of boxes after merging: {final_boxes.shape[0]}")
 
-    for img_idx in range(len(category_names)):  # Process each image in batch
-        best_box = pred_boxes[img_idx]  # 取第 img_idx 个 bbox
-        image_np = images[img_idx].permute(1, 2, 0).cpu().numpy()  # Convert [C, H, W] → [H, W, C]
+    # For all image in batch
+    for img_idx in range(images.shape[0]):
+        image_np = images[img_idx].permute(1, 2, 0).cpu().numpy()  # [C, H, W] → [H, W, C]
 
-        # 确保 bbox 形状为 [4,]
-        best_box = np.array(best_box).reshape(-1, 4)
+        all_masks = []  # 存储所有掩码
+        all_scores = []  # 存储所有置信度
+        # For all final_box in the same image
+        final_boxes = final_boxes.cpu().numpy().astype(np.float32)
+        for final_box in final_boxes:
+            final_box = final_box.reshape(1, 4)
+            masks, sam_scores = mobilesam_model.predict(image_np, final_box, multimask_output=False)
+            all_masks.append(masks)
+            all_scores.append(sam_scores)
 
-        masks, scores = mobilesam_model.predict(image_np, best_box)
+        all_masks = np.array(all_masks).squeeze()  # 变成 (N, H, W)
+        # 保证 shape 始终是 (N, H, W)
+        if all_masks.ndim == 2:  # 如果只有一个 mask，扩展维度
+            all_masks = np.expand_dims(all_masks, axis=0)
 
-        # 计算全局图片索引
-        image_number = batch_idx * dataloader.batch_size + img_idx + 1
-        print(f"Image {image_number}: Category: {category_names[img_idx]}, Confidence: {scores[0]}")
-        visualize_results(image_np, best_box, masks, category_names[img_idx], scores[0])
+        visualize_results(image_np, final_boxes, all_masks, category_names[0], all_scores)
 
-    processed_images += len(category_names)
-
+        print(f"Processed Image {processed_images + 1}/{max_images}")
+        print(f"Category: {category_names[0]}")
+        print(f"Detected Objects: {len(final_boxes)}")
+        print("=" * 50)
+        processed_images += 1
 

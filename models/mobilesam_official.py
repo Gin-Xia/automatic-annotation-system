@@ -12,20 +12,20 @@ class MobileSAMOfficial:
         # Initialize predictor
         self.predictor = SamPredictor(self.model)
 
-    def predict(self, image, box, multimask_output=True):
+    def predict(self, image, boxes, multimask_output=True):
         """
         Args:
             image: numpy array [H, W, 3] - input image
-            box: numpy array [4] - bounding box [x1, y1, x2, y2]
+            boxes: numpy array [num_boxes, 4] - bounding box (x_min, y_min, x_max, y_max)
             multimask_output: bool - whether to return multiple mask predictions
 
         Returns:
-            masks: numpy array [num_masks, H, W] - predicted segmentation masks
-            scores: numpy array [num_masks] - confidence scores for each mask
+            masks: numpy array [num_boxes, num_masks_per_box, H, W] - predicted segmentation masks
+            scores: numpy array [num_boxes, num_masks_per_box] - confidence scores for each mask
         """
         self.predictor.set_image(image)
         masks, scores, logits = self.predictor.predict(
-            box=box,
+            box=boxes,
             multimask_output=multimask_output
         )
         return masks, scores

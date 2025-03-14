@@ -1,44 +1,52 @@
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+import random
 
-def visualize_results(image_np, best_box, masks, category_name, confidence):
+def visualize_results(image, boxes, masks, category, scores):
     """
-    Visualize bounding boxes and masks on an image.
+    可视化 MobileSAM 结果：
+    - 在原始图像上绘制所有检测框
+    - 叠加所有分割掩码（使用不同颜色）
 
-    Args:
-        image_np (numpy array): The image in NumPy format.
-        best_box (numpy array): The predicted bounding box in pixel coordinates.
-        masks (numpy array): The predicted mask from MobileSAM.
-        category_name (str): The detected object category.
-        confidence (float): The confidence score.
+    参数：
+    - image: numpy 数组，形状 (H, W, C)，应为 uint8 格式
+    - boxes: numpy 数组，形状 (N, 4)，每行 [x_min, y_min, x_max, y_max]，像素坐标
+    - masks: numpy 数组，形状 (N, H, W)，二值掩码 (0 or 1)
+    - category: str，类别名称
+    - scores: numpy 数组，形状 (N,)，每个框的置信度
     """
-    # Convert float32 image to uint8
-    image_np = (image_np * 255).astype(np.uint8)
+    image_vis = image.copy()
+    image_vis = (image_vis * 255).astype(np.uint8)
 
-    # Convert grayscale mask to 3-channel
-    mask_overlay = (masks[0] > 0.5).astype(np.uint8) * 255
+    # 画检测框
+    for i, box in enumerate(boxes):
+        x_min, y_min, x_max, y_max = map(int, box)
+        cv2.rectangle(image_vis, (x_min, y_min), (x_max, y_max), (0, 255, 0), 1)
+        cv2.putText(image_vis, f"{category} {float(scores[i]):.2f}",
+                    (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 0), 1)
 
-    # Resize mask to match the image
-    mask_overlay = cv2.resize(mask_overlay, (image_np.shape[1], image_np.shape[0]))
+    # 创建彩色 mask 叠加层
+    color_mask = np.zeros_like(image_vis, dtype=np.uint8)
 
-    # Apply color map to the mask
-    mask_colored = cv2.applyColorMap(mask_overlay, cv2.COLORMAP_JET).astype(np.uint8)
+    # 颜色选择方案：使用随机颜色 or 预定义 colormap
+    cmap = plt.get_cmap("tab10")  # 可以换成 "jet", "viridis" 等
+    num_masks = len(masks)
 
-    # Blend the mask with the image
-    blended = cv2.addWeighted(image_np, 0.7, mask_colored, 0.3, 0)  # Ensure both are uint8
+    for i, mask in enumerate(masks):
+        color = np.array(cmap(i / num_masks)[:3]) * 255  # 获取 RGB 颜色并转换为 0-255
+        color = color.astype(np.uint8)
 
-    # Draw bounding box
-    x, y, w, h = map(int, best_box[0])
-    cv2.rectangle(blended, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green box
+        # 叠加 mask
+        color_mask[mask == 1] = color
 
-    # Add label
-    label = f"{category_name} ({confidence:.2f})"
-    cv2.putText(blended, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    # 透明叠加
+    alpha = 0.5
+    image_overlay = cv2.addWeighted(image_vis, 1 - alpha, color_mask, alpha, 0)
 
-    # Display image with bounding box and mask
-    plt.figure(figsize=(6, 6))
-    plt.imshow(blended)
+    # 显示最终可视化图
+    plt.figure(figsize=(8, 8))
+    plt.imshow(image_overlay)
     plt.axis("off")
-    plt.title("Object Detection & Segmentation Result")
+    plt.title(f"{category} - All Detections")
     plt.show()
