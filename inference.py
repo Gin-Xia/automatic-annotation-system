@@ -1,13 +1,10 @@
 import torch
 import numpy as np
-from PIL import Image
 from transformers import OwlViTProcessor
 from models.owlvit_official import OwlvitOfficial
 from models.mobilesam_official import MobileSAMOfficial
 from coco_loader import get_coco_dataloader  # Import the COCO DataLoader
 from visualize import visualize_results
-import torchvision.ops as ops
-from sklearn.cluster import KMeans
 import box_processing
 
 
