@@ -19,7 +19,7 @@ class OwlvitOfficial(nn.Module):
 
         Output:
             logits: Tensor [batch_size, num_queries, num_classes]
-            pred_boxes: Tensor [batch_size, num_queries, 4]
+            pred_boxes: Tensor [batch_size, num_queries, 4], normalized [x_center, y_center, w, h]
         """
         outputs = self.model(pixel_values=pixel_values,
                              input_ids=input_ids,
