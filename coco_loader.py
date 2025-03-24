@@ -37,7 +37,7 @@ class COCODataset(Dataset):
 
 # Define transformations
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),  # Resize images to fit ViT input
+    # transforms.Resize((224, 224)),  # Resize images to fit ViT input
     transforms.ToTensor(),
 ])
 

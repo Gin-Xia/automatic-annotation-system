@@ -173,6 +173,9 @@ cython_debug/
 # coco
 datasets/coco/
 
+# flickr
+datasets/flicker30k/
+
 # owlvit weight
 models/owlvit-base-patch32/
 
