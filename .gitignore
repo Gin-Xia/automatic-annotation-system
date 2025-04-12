@@ -178,6 +178,10 @@ datasets/flicker30k/
 
 # owlvit weight
 models/owlvit-base-patch32/
+models/owlvit-large-patch14/
 
 # sam weight
 models/mobile_sam.pt
+
+# test output
+output_annotations

@@ -4,7 +4,7 @@ from transformers import OwlViTForObjectDetection
 
 
 class OwlvitOfficial(nn.Module):
-    def __init__(self, pretrained_model_name="models/owlvit-base-patch32"):
+    def __init__(self, pretrained_model_name="models/owlvit-large-patch14"):
         super(OwlvitOfficial, self).__init__()
 
         # Load the official OWL-ViT model

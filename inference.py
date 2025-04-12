@@ -6,12 +6,12 @@ from transformers import OwlViTProcessor
 from models.owlvit_official import OwlvitOfficial
 from models.mobilesam_official import MobileSAMOfficial
 from coco_loader import get_coco_dataloader
-from flickr_loader import get_flickr_inference_dataloader
+from flickr_loader import get_flickr_dataloader
 from visualize import visualize_results
 import box_processing
 
 
-# ========== 设置日志 ==========
+# ========== setup log ==========
 logging.basicConfig(
     filename="inference.log",
     filemode="w",
@@ -19,19 +19,19 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# ========== 设置设备 ==========
+# ========== setup device ==========
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logging.info(f"Using device: {device}")
 print(f"Using device: {device}")
 
-# ========== 初始化模型 ==========
+# ========== initialize model ==========
 owlvit_model = OwlvitOfficial().to(device)
-processor = OwlViTProcessor.from_pretrained("models/owlvit-base-patch32")
+processor = OwlViTProcessor.from_pretrained("models/owlvit-large-patch14")
 owlvit_model.eval()
 
 mobilesam_model = MobileSAMOfficial(checkpoint_path="models/mobile_sam.pt")
 
-# ========== 加载 COCO 数据集 ==========
+# ========== load dataset ==========
 dataloader = get_coco_dataloader(
     root="datasets/coco/train2017",
     annotation="datasets/coco/annotations/instances_train2017.json",
@@ -39,34 +39,34 @@ dataloader = get_coco_dataloader(
     shuffle=False
 )
 
-# dataloader = get_flickr_inference_dataloader(
+# dataloader = get_flickr_dataloader(
 #     image_dir="datasets/flicker30k/flickr30k-images",
-#     annotation_dir="datasets/flicker30k/Sentences",
-#     batch_size=1,
-#     shuffle=False
+#     annotation_dir="datasets/flicker30k/Annotations",
+#     sentence_dir="datasets/flicker30k/Sentences",
+#     batch_size=1
 # )
 
 
-# ========== 推理配置 ==========
-max_images = 4
+# ========== config ==========
+max_images = 10
 processed_images = 0
 
-# ========== 开始总计时 ==========
+# ========== start timing ==========
 if torch.cuda.is_available():
     torch.cuda.synchronize()
 total_start_time = time.time()
 
-# ========== 推理主循环 ==========
+# ========== inference main loop ==========
 for batch_idx, batch in enumerate(dataloader):
     if processed_images >= max_images:
         break
 
-    images, bboxes, category_names = batch
+    images, bboxes, prompts = batch
     print("images.size:",images.size())
-    category_names = [[category_names[0][0]]]
+    prompts = [[prompts[0][0]]]
     images = images.to(device=device, dtype=torch.float32)
 
-    inputs = processor(text=category_names, images=images, return_tensors="pt", do_rescale=False)
+    inputs = processor(text=prompts, images=images, return_tensors="pt", do_rescale=False)
     inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
@@ -87,12 +87,11 @@ for batch_idx, batch in enumerate(dataloader):
     if valid_boxes.shape[0] == 0:
         logging.info("No high-confidence objects detected.")
         print("No high-confidence objects detected.")
-        break
+        continue
 
     converted_boxes = box_processing.convert_boxes(valid_boxes, images.shape[-2:])
     filtered_boxes, filtered_scores = box_processing.apply_nms(converted_boxes, valid_scores, iou_threshold=0.3)
     final_boxes = box_processing.merge_high_iou_boxes(filtered_boxes, filtered_scores, iou_threshold=0.7)
-
     log_msg = f"Detected {final_boxes.shape[0]} high-confidence objects after NMS + Merge"
     logging.info(log_msg)
     print(log_msg)
@@ -114,16 +113,16 @@ for batch_idx, batch in enumerate(dataloader):
         if all_masks.ndim == 2:
             all_masks = np.expand_dims(all_masks, axis=0)
 
-        visualize_results(image_np, final_boxes, all_masks, category_names[0], all_scores)
+        visualize_results(image_np, final_boxes, all_masks, prompts[0], all_scores)
 
-        log_info = f"Processed Image {processed_images + 1}/{max_images} | Category: {category_names[0]} | Objects: {len(final_boxes)}"
+        log_info = f"Processed Image {processed_images + 1}/{max_images} | Category: {prompts[0]} | Objects: {len(final_boxes)}"
         logging.info(log_info)
         print(log_info)
         print("=" * 50)
 
         processed_images += 1
 
-# ========== 结束计时 ==========
+# ========== end timing ==========
 if torch.cuda.is_available():
     torch.cuda.synchronize()
 total_end_time = time.time()
