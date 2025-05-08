@@ -21,6 +21,12 @@ A zero-shot visual annotation pipeline combining OWL-ViT and MobileSAM, with pro
 
 ---
 
+## User Interface
+
+![GUI Overview](GUI_Showcase.png)
+
+---
+
 ## Project Structure
 
 ```
