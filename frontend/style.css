@@ -82,6 +82,10 @@ body {
 }
 
 
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 
 
@@ -91,7 +95,9 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
+    flex-direction: column;
 }
+
 
 #image-container {
     width: 90%;
@@ -202,5 +208,24 @@ body {
     margin-left: 5px;
 }
 
+
+
+#progressBarContainer {
+    width: 90%;
+    height: 10px;
+    background-color: #161b22;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid #30363d;
+    display: none;
+}
+
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background-color: #ccc;
+  border-radius: 6px;
+  transition: width 0.3s;
+}
 
 

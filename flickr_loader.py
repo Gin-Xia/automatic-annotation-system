@@ -27,7 +27,6 @@ class FlickrDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        # 解析 bbox
         tree = ET.parse(xml_path)
         root = tree.getroot()
         entity_boxes = {}
@@ -45,7 +44,6 @@ class FlickrDataset(Dataset):
             box = [xmin, ymin, w, h]
             entity_boxes.setdefault(eid, []).append(box)
 
-        # 解析 phrase
         with open(txt_path, "r", encoding="utf-8") as f:
             text = f.read()
         entity_phrases = {}
@@ -53,7 +51,6 @@ class FlickrDataset(Dataset):
         for eid, phrase in matches:
             entity_phrases.setdefault(eid, set()).add(phrase.strip())
 
-        # 匹配实体 + phrase
         final_boxes = []
         final_phrases = []
         for eid in entity_boxes:
@@ -66,7 +63,7 @@ class FlickrDataset(Dataset):
         bboxes = torch.tensor(final_boxes, dtype=torch.float32) if final_boxes else torch.zeros((0, 4), dtype=torch.float32)
         return image, bboxes, final_phrases
 
-# 与 COCO 一致的 transform 和 collate
+
 transform = transforms.Compose([transforms.ToTensor()])
 
 def collate_fn(batch):

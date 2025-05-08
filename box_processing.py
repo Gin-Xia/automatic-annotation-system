@@ -2,6 +2,7 @@ import torch
 import torchvision.ops as ops
 import matplotlib.pyplot as plt
 
+
 def compute_elbow_threshold_from_logits(logits, apply_sigmoid=True):
     """
     Compute elbow threshold from raw logits. Optionally apply sigmoid to output a probability.
@@ -28,7 +29,7 @@ def compute_elbow_threshold_from_logits(logits, apply_sigmoid=True):
     return torch.sigmoid(torch.tensor(elbow_logit)).item() if apply_sigmoid else elbow_logit
 
 
-def filter_boxes_by_score(logits, pred_boxes, min_threshold=0.09, show_plot=True):
+def filter_boxes_by_score(logits, pred_boxes, min_threshold=0.09, show_plot=False):
     """
     Filter out low-confidence boxes with a dynamic threshold.
 
@@ -77,6 +78,7 @@ def filter_boxes_by_score(logits, pred_boxes, min_threshold=0.09, show_plot=True
     valid_indices = scores > threshold
     valid_boxes = pred_boxes[valid_indices]
     valid_scores = scores[valid_indices]
+    print("============================================")
 
     return valid_boxes, valid_scores
 
@@ -116,13 +118,31 @@ def compute_iou(box1, box2):
 
 
 def merge_high_iou_boxes(boxes, scores, iou_threshold=0.7):
-    """Merge boxes with high IoU overlap"""
+    """
+    Merge boxes with IoU greater than the threshold using weighted averaging.
+
+    Args:
+        boxes: Tensor of shape (N, 4), each box is [x1, y1, x2, y2]
+        scores: Tensor of shape (N,), confidence score for each box
+        iou_threshold: IoU threshold above which boxes are merged
+
+    Returns:
+        Tensor of shape (M, 4), merged boxes
+    """
+    print(f"Total boxes before merge: {len(boxes)}")
+    assert boxes.shape[0] == scores.shape[0], "Boxes and scores must match in length"
+    if boxes.shape[0] == 0:
+        return boxes  # Return empty tensor if no boxes
+
+    device = boxes.device
     merged = []
     used = set()
 
     for i in range(len(boxes)):
         if i in used:
             continue
+
+        # Initialize a group of overlapping boxes
         overlapping = [(boxes[i], scores[i])]
         used.add(i)
 
@@ -133,8 +153,13 @@ def merge_high_iou_boxes(boxes, scores, iou_threshold=0.7):
                 overlapping.append((boxes[j], scores[j]))
                 used.add(j)
 
-        total_score = sum(score for _, score in overlapping)
-        merged_box = sum(box * (score / total_score) for box, score in overlapping)
+        # === Merge the group ===
+        group_scores = torch.tensor([score for _, score in overlapping], dtype=torch.float32, device=device)
+        group_boxes = torch.stack([box for box, _ in overlapping])
+
+        group_weights = group_scores / group_scores.sum()
+        merged_box = (group_weights[:, None] * group_boxes).sum(dim=0)  # Weighted merge
+
         merged.append(merged_box)
 
-    return torch.stack(merged)
+    return torch.stack(merged, dim=0)

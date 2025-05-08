@@ -22,14 +22,19 @@
         <option value="bbox+seg">Bounding Box + Segmentation</option>
     </select>
 
-    <button onclick="chooseFolder()">Choose Folder</button>
-    <button onclick="process()">Start Processing</button>
+    <button onclick="process()">Start Process</button>
+    <button id="cancelBtn" onclick="cancelProcess()" style="display: none;">Cancel</button>
+
 </div>
 
 
 
   <div class="main-content">
     <div class="image-viewer">
+        <div id="progressBarContainer">
+            <div id="progressBar"></div>
+        </div>
+
         <div id="image-container">
             <span id="placeholder-text">Please add image and prompt, and the result will be shown here.</span>
             <img id="preview" src="" alt="Preview" style="display: none;">

@@ -1,106 +1,124 @@
 # Automatic Annotation System
 
-## **Project Overview**
-The **Automatic Annotation System** is a deep learning pipeline that integrates **OWL-ViT**（Open-Vocabulary Vision Transformer） and **MobileSAM**（Segment Anything Model） to automatically annotate images. It processes images, detects objects using OWL-ViT, and refines segmentation masks with MobileSAM.
+A zero-shot visual annotation pipeline combining OWL-ViT and MobileSAM, with prompt engineering, bounding box post-processing, and optional GUI frontend for fast and flexible dataset labeling.
 
-## **Features**
-- **Batch Inference Support**: Process multiple images in parallel.
-- **Text-Guided Object Detection**: OWL-ViT enables open-vocabulary object detection.
-- **High-Precision Segmentation**: MobileSAM generates fine-grained masks.
-- **COCO Dataset Support**: Uses the COCO dataset for training and evaluation.
-- **Visualization Tools**: Visualize results with bounding boxes and segmentation masks.
+---
 
-## **Project Structure**
+## Features
+
+-  **Zero-shot object detection** using OWL-ViT
+-  **Segmentation masks** via MobileSAM
+-  **Prompt expansion** using LLM-guided augmentation
+-  **Box filtering and merging** (confidence thresholding, NMS, IoU merging)
+-  **Visualization** of boxes and masks with score overlays
+-  **Evaluation and metrics**
+-  **Web-based frontend** (HTML/JS/CSS)
+---
+
+## System Pipeline
+
+![Pipeline Overview](pipeline_diagram.png)
+
+---
+
+## Project Structure
+
 ```
 automatic-annotation-system/
-│── datasets/               # Dataset management
-│   ├── coco/               # COCO dataset structure
-│   │   ├── annotations/    # COCO annotations (JSON files)
-│   │   ├── train2017/      # Training images
-│   │   ├── val2017/        # Validation images
-│── models/                 # Model definitions and weights
-│   ├── owlvit-base-patch32/  # Pretrained OWL-ViT model files
-│   │   ├── config.json
-│   │   ├── merges.txt
-│   │   ├── model.safetensors
-│   │   ├── preprocessor_config.json
-│   │   ├── pytorch_model.bin
-│   │   ├── special_tokens_map.json
-│   │   ├── tokenizer_config.json
-│   │   ├── vocab.json
-│   ├── mobile_sam.pt       # Pretrained MobileSAM model weights
+│
+├── datasets/
+│   ├── coco/
+│   └── flicker30k/
+│
+├── frontend/                     # Optional GUI frontend
+│   ├── Ademo/                    # Functionnally Demo
+│   ├── index.html
+│   ├── script.js
+│   └── style.css
+│
+├── models/                       # Model weights and wrappers
+│   ├── owlvit-base-patch32/
+│   ├── owlvit-large-patch14/
+│   ├── owlv2-large-patch14-ensemble/
+│   ├── mobile_sam.pt             # MobileSAM weights
 │   ├── mobilesam_official.py
 │   ├── owlvit.py
-│   ├── owlvit_official.py
-│   ├── text_encoder.py
-│   ├── vision_encoder.py
-│── .gitignore              # Git ignore file
-│── coco_loader.py          # DataLoader for COCO dataset
-│── inference.py            # Script for running inference
-│── train.py                # Script for training models
-│── visualize.py            # Visualization utilities
-│── README.md               # Project documentation
+│   └── owlvit_official.py
+│
+├── app.py                        # Launches GUI and API backend
+├── inference.py                  # OWL-ViT + SAM pipeline showcase
+├── train.py                      # For optional fine-tuning
+├── config.py                     # Paths and config values
+├── box_processing.py             # NMS, merge, filtering
+├── ensemble_inference.py         # Inference used in GUI
+├── flickr_loader.py
+├── flickr30k_entities_utils.py
+├── FlickrTrainingDataset.py
+├── image_folder_dataset.py
+├── expand_prompt.py              # LLM-based prompt generator
+├── evaluation_metrics.py
+├── grid_search.py
+├── coco_loader.py
+├── visualize.py
+├── environment.yml               # Conda environment config
+├── inference.log                 # Logs from recent run
+├── pipeline_diagram.png          # System pipeline diagram
+└── README.md
 ```
 
-## **Installation**
-### **1. Clone the Repository**
+---
+
+##  Getting Started
+
+### 1. Clone the repository
+
 ```bash
-git clone https://github.com/yourusername/automatic-annotation-system.git
+git clone https://github.com/your-username/automatic-annotation-system.git
 cd automatic-annotation-system
 ```
 
-### **2. Create and Activate Virtual Environment**
+### 2. Set up the environment
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On macOS/Linux
-.venv\Scripts\activate     # On Windows
+conda env create -f environment.yml
+conda activate auto-annotate
 ```
 
-### **3. Install Dependencies**
+
+### 3. Launch frontend
+
 ```bash
-pip install -r requirements.txt
+python app.py
+# or open frontend/index.html in a browser
 ```
 
-## **Usage**
-### **Running Inference**
-To run inference on COCO images using OWL-ViT and MobileSAM:
-```bash
-python inference.py
-```
-- The script loads images, detects objects, and generates segmentation masks.
-- Outputs include **bounding boxes, segmentation masks, and confidence scores**.
+---
 
-### **Training the Model**
-To train a custom model:
-```bash
-python train.py
-```
-Modify the `train.py` script to specify dataset paths and training parameters.
+## Outputs
 
-## **Configuration**
-Modify `coco_loader.py` to specify dataset paths:
-```python
-dataloader = get_coco_dataloader(root="datasets/coco/train2017",
-                                 annotation="datasets/coco/annotations/instances_train2017.json",
-                                 batch_size=8, shuffle=True)
-```
+- Bounding boxes with scores
+- Instance masks from MobileSAM
+- Expanded prompts for diverse detection
+- Interactive visual result display
 
-## **Visualization**
-Results can be visualized using `visualize.py`. To display predictions:
-```python
-from visualize import visualize_results
-visualize_results(image_np, best_box, masks, category_name, confidence)
-```
-
-## **Dependencies**
-- `torch`
-- `transformers`
-- `numpy`
-- `PIL`
-- `mobile-sam`
-- `torchvision`
-
-## **License**
-This project is licensed under the MIT License.
+---
 
 
+
+## TODOs
+
+- [ ] Add Dockerfile for reproducibility
+- [ ] LLM-in-the-loop prompt refinement
+- [ ] Custom training on pseudo-labeled dataset
+
+---
+
+## License
+
+MIT License
+
+---
+
+## Contact
+
+Questions or suggestions? Open an issue please.

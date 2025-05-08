@@ -3,13 +3,13 @@ import numpy as np
 import time
 import logging
 from transformers import OwlViTProcessor
+from transformers import Owlv2Processor, Owlv2ForObjectDetection
 from models.owlvit_official import OwlvitOfficial
 from models.mobilesam_official import MobileSAMOfficial
 from coco_loader import get_coco_dataloader
 from flickr_loader import get_flickr_dataloader
 from visualize import visualize_results
 import box_processing
-
 
 # ========== setup log ==========
 logging.basicConfig(
@@ -62,7 +62,7 @@ for batch_idx, batch in enumerate(dataloader):
         break
 
     images, bboxes, prompts = batch
-    print("images.size:",images.size())
+    print("images.size:", images.size())
     prompts = [[prompts[0][0]]]
     images = images.to(device=device, dtype=torch.float32)
 
@@ -74,24 +74,18 @@ for batch_idx, batch in enumerate(dataloader):
 
     logits = outputs[0]
     pred_boxes = outputs[1]
-    #
-    # logits = logits.squeeze(0).squeeze(-1)
-    #
-    # print("logits.shape:", logits.shape)
-    # logits = logits.sigmoid()
-    # # print(logits)
     print(logits.squeeze(0).squeeze(-1).sigmoid().min(), logits.squeeze(0).squeeze(-1).sigmoid().max())
-    # # print(logits.sigmoid())
 
-    valid_boxes, valid_scores = box_processing.filter_boxes_by_score(logits, pred_boxes)
+    valid_boxes, valid_scores = box_processing.filter_boxes_by_score(logits, pred_boxes, show_plot=False)
     if valid_boxes.shape[0] == 0:
         logging.info("No high-confidence objects detected.")
-        print("No high-confidence objects detected.")
+        print("---------No high-confidence objects detected.")
         continue
 
     converted_boxes = box_processing.convert_boxes(valid_boxes, images.shape[-2:])
     filtered_boxes, filtered_scores = box_processing.apply_nms(converted_boxes, valid_scores, iou_threshold=0.3)
     final_boxes = box_processing.merge_high_iou_boxes(filtered_boxes, filtered_scores, iou_threshold=0.7)
+    print(f"Detected {final_boxes.shape[0]} objects after NMS + Merge")
     log_msg = f"Detected {final_boxes.shape[0]} high-confidence objects after NMS + Merge"
     logging.info(log_msg)
     print(log_msg)
@@ -139,6 +133,7 @@ if processed_images > 0:
     print(avg_msg)
 
 
+# ========== integrate for grid_search ==========
 def run_single_inference(confidence_threshold=0.3, top_k=5, merge_iou_threshold=0.7):
     processed_images = 0
     max_images = 10
@@ -163,14 +158,16 @@ def run_single_inference(confidence_threshold=0.3, top_k=5, merge_iou_threshold=
         logits = outputs[0]
         pred_boxes = outputs[1]
 
-        valid_boxes, valid_scores = box_processing.filter_boxes_by_score(logits, pred_boxes, top_k=top_k, threshold=confidence_threshold)
+        valid_boxes, valid_scores = box_processing.filter_boxes_by_score(logits, pred_boxes, top_k=top_k,
+                                                                         threshold=confidence_threshold)
         if valid_boxes.shape[0] == 0:
             print("No high-confidence objects detected.")
             continue
 
         converted_boxes = box_processing.convert_boxes(valid_boxes, images.shape[-2:])
         filtered_boxes, filtered_scores = box_processing.apply_nms(converted_boxes, valid_scores, iou_threshold=0.3)
-        final_boxes = box_processing.merge_high_iou_boxes(filtered_boxes, filtered_scores, iou_threshold=merge_iou_threshold)
+        final_boxes = box_processing.merge_high_iou_boxes(filtered_boxes, filtered_scores,
+                                                          iou_threshold=merge_iou_threshold)
 
         for img_idx in range(images.shape[0]):
             image_np = images[img_idx].permute(1, 2, 0).cpu().numpy()
@@ -196,4 +193,3 @@ def run_single_inference(confidence_threshold=0.3, top_k=5, merge_iou_threshold=
         torch.cuda.synchronize()
     total_end_time = time.time()
     print(f"Total time: {total_end_time - total_start_time:.2f}s")
-

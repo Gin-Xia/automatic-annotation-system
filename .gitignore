@@ -179,6 +179,7 @@ datasets/flicker30k/
 # owlvit weight
 models/owlvit-base-patch32/
 models/owlvit-large-patch14/
+models/owlv2-large-patch14-ensemble/
 
 # sam weight
 models/mobile_sam.pt
