@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+
 def get_sentence_data(fn):
     """
     Parses a sentence file from the Flickr30K Entities dataset
@@ -57,16 +58,17 @@ def get_sentence_data(fn):
                 else:
                     words.append(token)
 
-        sentence_data = {'sentence' : ' '.join(words), 'phrases' : []}
+        sentence_data = {'sentence': ' '.join(words), 'phrases': []}
         for index, phrase, p_id, p_type in zip(first_word, phrases, phrase_id, phrase_type):
-            sentence_data['phrases'].append({'first_word_index' : index,
-                                             'phrase' : phrase,
-                                             'phrase_id' : p_id,
-                                             'phrase_type' : p_type})
+            sentence_data['phrases'].append({'first_word_index': index,
+                                             'phrase': phrase,
+                                             'phrase_id': p_id,
+                                             'phrase_type': p_type})
 
         annotations.append(sentence_data)
 
     return annotations
+
 
 def get_annotations(fn):
     """
@@ -88,7 +90,7 @@ def get_annotations(fn):
     tree = ET.parse(fn)
     root = tree.getroot()
     size_container = root.findall('size')[0]
-    anno_info = {'boxes' : {}, 'scene' : [], 'nobox' : []}
+    anno_info = {'boxes': {}, 'scene': [], 'nobox': []}
     for size_element in size_container:
         anno_info[size_element.tag] = int(size_element.text)
 
@@ -114,5 +116,3 @@ def get_annotations(fn):
                     anno_info['scene'].append(box_id)
 
     return anno_info
-
-

@@ -7,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 from transformers import OwlViTProcessor
 
+
 class FlickrTrainingDataset(Dataset):
     def __init__(self, image_dir, annotation_dir, sentence_dir, processor, vocab, num_queries=10, transform=None):
         self.image_dir = image_dir
@@ -78,14 +79,14 @@ class FlickrTrainingDataset(Dataset):
 
         prompt_text = " ".join(list(self.vocab.keys()))
         encoding = self.processor(text=prompt_text,
-                                   images=image,
-                                   return_tensors="pt",
-                                   padding="max_length",
-                                   truncation=True)
+                                  images=image,
+                                  return_tensors="pt",
+                                  padding="max_length",
+                                  truncation=True)
 
-        pixel_values = encoding['pixel_values'].squeeze(0)        # [3, H, W]
-        input_ids = encoding['input_ids'].squeeze(0)              # [seq_len]
-        attention_mask = encoding['attention_mask'].squeeze(0)    # [seq_len]
+        pixel_values = encoding['pixel_values'].squeeze(0)  # [3, H, W]
+        input_ids = encoding['input_ids'].squeeze(0)  # [seq_len]
+        attention_mask = encoding['attention_mask'].squeeze(0)  # [seq_len]
 
         return {
             "pixel_values": pixel_values,
@@ -94,6 +95,7 @@ class FlickrTrainingDataset(Dataset):
             "labels": labels,
             "boxes": boxes
         }
+
 
 def collate_fn(batch):
     pixel_values = torch.stack([item['pixel_values'] for item in batch])
@@ -109,6 +111,7 @@ def collate_fn(batch):
         "labels": labels,
         "boxes": boxes
     }
+
 
 def get_flickr_training_loader(image_dir, annotation_dir, sentence_dir, vocab, processor, batch_size=8, shuffle=True):
     dataset = FlickrTrainingDataset(

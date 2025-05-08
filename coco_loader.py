@@ -4,6 +4,7 @@ from torchvision.datasets import CocoDetection
 import torchvision.transforms as transforms
 from PIL import Image
 
+
 class COCODataset(Dataset):
     def __init__(self, root, annotation, transform=None):
         """
@@ -35,17 +36,20 @@ class COCODataset(Dataset):
 
         return image, bboxes, category_names
 
+
 # Define transformations
 transform = transforms.Compose([
     # transforms.Resize((224, 224)),  # Resize images to fit ViT input
     transforms.ToTensor(),
 ])
 
+
 # Custom collate function to handle batch processing
 def collate_fn(batch):
     images, bboxes, category_names = zip(*batch)
     images = torch.stack(images)  # Convert list of Tensors to batch Tensor [B, C, H, W]
     return images, list(bboxes), list(category_names)
+
 
 # Initialize dataset and dataloader
 def get_coco_dataloader(root, annotation, batch_size=8, shuffle=True):

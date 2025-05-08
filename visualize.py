@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
+
 # def visualize_results(image, boxes, masks, category, scores):
 #     """
 #     Visualize MobileSAM results:
@@ -48,8 +49,6 @@ import random
 #     plt.axis("off")
 #     plt.title(f"{category} - All Detections")
 #     plt.show()
-
-
 
 
 def visualize_results(image, boxes, masks, category, scores, save_path=None):

@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 import os
 
+
 class ImageFolderDataset(Dataset):
     def __init__(self, folder_path):
         """

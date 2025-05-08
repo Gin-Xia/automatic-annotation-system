@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 
+
 class FlickrDataset(Dataset):
     def __init__(self, image_dir, annotation_dir, sentence_dir, transform=None):
         self.image_dir = image_dir
@@ -60,16 +61,19 @@ class FlickrDataset(Dataset):
                         final_boxes.append(box)
                         final_phrases.append(phrase)
 
-        bboxes = torch.tensor(final_boxes, dtype=torch.float32) if final_boxes else torch.zeros((0, 4), dtype=torch.float32)
+        bboxes = torch.tensor(final_boxes, dtype=torch.float32) if final_boxes else torch.zeros((0, 4),
+                                                                                                dtype=torch.float32)
         return image, bboxes, final_phrases
 
 
 transform = transforms.Compose([transforms.ToTensor()])
 
+
 def collate_fn(batch):
     images, bboxes, category_names = zip(*batch)
     images = torch.stack(images)
     return images, list(bboxes), list(category_names)
+
 
 def get_flickr_dataloader(image_dir, annotation_dir, sentence_dir, batch_size=8, shuffle=True):
     dataset = FlickrDataset(

@@ -54,4 +54,3 @@ class Owlvit(nn.Module):
         detection_output = self.detection_head(fused_features)
 
         return detection_output
-

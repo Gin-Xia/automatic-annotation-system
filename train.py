@@ -9,6 +9,7 @@ import numpy as np
 from mobile_sam.build_sam import build_sam_vit_t
 from mobile_sam.automatic_mask_generator import SamAutomaticMaskGenerator
 
+
 def preprocess_image(image_path):
     transform = transforms.Compose([
         transforms.Resize((1024, 1024)),
@@ -29,8 +30,8 @@ class PromptGenerator:
             point = torch.tensor([[W // 2, H // 2]])
             label = torch.tensor([0])
         return {
-            "point_coords": point.unsqueeze(0),   # [1, 1, 2]
-            "point_labels": label.unsqueeze(0),   # [1, 1]
+            "point_coords": point.unsqueeze(0),  # [1, 1, 2]
+            "point_labels": label.unsqueeze(0),  # [1, 1]
             "boxes": None,
             "mask_inputs": None,
         }
@@ -90,14 +91,14 @@ for epoch in range(20):
             )
 
             pred_mask, _ = model.mask_decoder(
-                image_embedding[i:i+1],
-                model.prompt_encoder.get_dense_pe()[i:i+1],
+                image_embedding[i:i + 1],
+                model.prompt_encoder.get_dense_pe()[i:i + 1],
                 sparse_embeddings,
                 dense_embeddings,
                 False
             )
 
-            loss = F.binary_cross_entropy_with_logits(pred_mask, gt_mask[i:i+1])
+            loss = F.binary_cross_entropy_with_logits(pred_mask, gt_mask[i:i + 1])
             losses.append(loss)
 
         total_batch_loss = torch.stack(losses).mean()

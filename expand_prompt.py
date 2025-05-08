@@ -1,5 +1,5 @@
-
 import openai
+
 
 def expand_prompt(description, api_key, model="gpt-3.5-turbo", n=2):
     """
@@ -52,5 +52,3 @@ def expand_prompt(description, api_key, model="gpt-3.5-turbo", n=2):
     except Exception as e:
         print(f"[expand_prompt] OpenAI request failed: {e}")
         return [description]  # fallback
-
-

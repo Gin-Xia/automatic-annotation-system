@@ -31,14 +31,12 @@ async function listFiles(folder) {
         });
     }
 
-    // 清空预览区
     const img = document.getElementById('preview');
     const placeholder = document.getElementById('placeholder-text');
     img.src = "";
     img.style.display = 'none';
     placeholder.style.display = 'block';
 }
-
 
 
 function previewImage(filename) {
@@ -57,8 +55,6 @@ function previewImage(filename) {
     img.style.display = 'block';
     placeholder.style.display = 'none';
 }
-
-
 
 
 async function process() {
@@ -86,13 +82,13 @@ async function process() {
     startBtn.innerText = "Processing...";
     cancelBtn.style.display = "inline-block";
     cancelBtn.disabled = false;
-    cancelRequested = false;  // 重置取消请求
+    cancelRequested = false;
 
     try {
 
-        if (mode == "bbox"){
+        if (mode == "bbox") {
             seg = false
-        }else{
+        } else {
             seg = true
         }
         document.getElementById("processedList").innerHTML = "";
@@ -125,13 +121,11 @@ let cancelRequested = false;
 
 function cancelProcess() {
     cancelRequested = true;
-    window.pywebview.api.cancel_processing();  // 后端设置 cancel_flag
+    window.pywebview.api.cancel_processing();
     const cancelBtn = document.getElementById('cancelBtn');
     cancelBtn.disabled = true;
     alert("❗️ Cancellation requested. Will stop after current image.");
 }
-
-
 
 
 function addToProcessedList(filename) {
@@ -139,7 +133,6 @@ function addToProcessedList(filename) {
     const li = document.createElement('li');
     li.innerText = filename;
 
-    // 绑定点击行为
     li.onclick = () => {
         let httpPath;
         if (seg) {
@@ -153,8 +146,6 @@ function addToProcessedList(filename) {
 
     list.appendChild(li);
 }
-
-
 
 
 async function listProcessedFiles(folder) {
@@ -173,7 +164,7 @@ async function listProcessedFiles(folder) {
         const index = files.indexOf(file);
         const li = document.createElement('li');
         li.innerText = file;
-        li.onclick =  () => {
+        li.onclick = () => {
             let httpPath;
             if (seg) {
                 httpPath = `output_seg/${file}`;
@@ -187,12 +178,11 @@ async function listProcessedFiles(folder) {
 
         list.appendChild(li);
 
-        // 默认预览第一张处理好的图片
         if (index === 0) {
             let httpPath;
-            if (seg){
-                 httpPath = `output_seg/${file}`;
-            }else  {
+            if (seg) {
+                httpPath = `output_seg/${file}`;
+            } else {
                 httpPath = `output_bbox/${file}`;
             }
             console.log("filename is:", httpPath);

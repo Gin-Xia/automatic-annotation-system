@@ -14,6 +14,6 @@ param_dicts = [dict(zip(param_grid.keys(), values)) for values in param_combinat
 
 # Run each config
 for i, params in enumerate(param_dicts):
-    print(f"\n=== Grid Search Run {i+1}/{len(param_dicts)} ===")
+    print(f"\n=== Grid Search Run {i + 1}/{len(param_dicts)} ===")
     print("Params:", params)
     run_single_inference(**params)
