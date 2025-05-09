@@ -79,7 +79,7 @@ automatic-annotation-system/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/automatic-annotation-system.git
+git clone https://github.com/Gin-Xia/automatic-annotation-system.git
 cd automatic-annotation-system
 ```
 
@@ -87,7 +87,7 @@ cd automatic-annotation-system
 
 ```bash
 conda env create -f environment.yml
-conda activate auto-annotate
+conda activate automatic-annotation-system
 ```
 
 
