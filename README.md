@@ -95,7 +95,6 @@ conda activate auto-annotate
 
 ```bash
 python app.py
-# or open frontend/index.html in a browser
 ```
 
 ---
